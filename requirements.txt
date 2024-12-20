@@ -8,3 +8,4 @@ matplotlib
 tables
 requests
 gdown
+tensorflow
