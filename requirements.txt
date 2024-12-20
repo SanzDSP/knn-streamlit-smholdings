@@ -10,3 +10,4 @@ requests
 gdown
 tensorflow
 io
+h5py
