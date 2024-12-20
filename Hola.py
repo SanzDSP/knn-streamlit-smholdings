@@ -16,23 +16,15 @@ st.write("Aplikasi ini menggunakan algoritma K-Nearest Neighbors (KNN) untuk men
 
 def load_model():
     try:
-        # URL Google Drive
-        url = "https://drive.google.com/file/d/1ozBdPgL-4R7nR6dFClY5HGSi75m7hEuo/view?usp=drive_link"
-        
-        # Path sementara untuk menyimpan file
-        temp_file = "temp_model.h5"
-        
-        # Download file dari Google Drive
-        gdown.download(url, temp_file, quiet=False)
-        
-        # Membaca file HDF5
-        X_train = pd.read_hdf(temp_file, key='fitur_training')
+        # Path ke file CSV
+        X_train = pd.read_csv("fitur_training.csv")
+        y_train = pd.read_csv("label_training.csv")
         
         # Inisialisasi scaler
         scaler = StandardScaler()
         scaler.fit(X_train)
         
-        # Load model dari file pickle (ubah sesuai dengan nama model Anda)
+        # Load model dari file pickle
         model = joblib.load("knn_model.pkl")
         
         return model, scaler
