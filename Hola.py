@@ -33,7 +33,7 @@ open_price = st.number_input("Harga Open", min_value=0.0, step=0.01)
 high_price = st.number_input("Harga High", min_value=0.0, step=0.01)
 low_price = st.number_input("Harga Low", min_value=0.0, step=0.01)
 close_price = st.number_input("Harga Close", min_value=0.0, step=0.01)
-volume = st.number_input("Volume", min_value=0.0, step=1.0)
+volume = st.number_input("Volume", min_value=0.0, step=10000.0)
 
 # Path file model
 file_path = "samsungholdings_classification.h5"
