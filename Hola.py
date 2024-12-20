@@ -14,15 +14,27 @@ def load_data(file_path):
     y_test = pd.read_hdf(file_path, key='label_testing')
     return X_train, y_train, X_test, y_test
 
+# Fungsi untuk memilih k terbaik
+def find_best_k(X_train, y_train):
+    scores = {}
+    for k in range(1, 21):  # Mencoba k dari 1 hingga 20
+        knn = KNeighborsClassifier(n_neighbors=k)
+        knn.fit(X_train, y_train)
+        y_pred = knn.predict(X_train)
+        scores[k] = accuracy_score(y_train, y_pred)
+    best_k = max(scores, key=scores.get)
+    return best_k
+
 # Fungsi untuk membuat dan melatih model
 @st.cache_resource
 def load_model(file_path):
     X_train, y_train, _, _ = load_data(file_path)
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
-    knn = KNeighborsClassifier(n_neighbors=7)
+    best_k = find_best_k(X_train_scaled, y_train)  # Cari k terbaik
+    knn = KNeighborsClassifier(n_neighbors=best_k)
     knn.fit(X_train_scaled, y_train)
-    return knn, scaler
+    return knn, scaler, best_k
 
 # Judul aplikasi
 st.title("Klasifikasi Saham Samsung")
@@ -39,7 +51,8 @@ volume = st.number_input("Volume", min_value=0.0, step=10000.0)
 file_path = "samsungholdings_classification.h5"
 
 # Memuat model
-knn_model, scaler = load_model(file_path)
+knn_model, scaler, best_k = load_model(file_path)
+st.write(f"Model menggunakan k={best_k}")
 
 # Prediksi
 if st.button("Klasifikasikan"):
@@ -55,7 +68,7 @@ if st.button("Klasifikasikan"):
         user_data_scaled = scaler.transform(user_data)
         prediction = knn_model.predict(user_data_scaled)
 
-        st.success(f"Hasil klasifikasi: {prediction[0].capitalize()} saham")
+        st.success(f"Hasil klasifikasi: {'Baik' if prediction[0] == 1 else 'Buruk'} saham")
     else:
         st.error("Silakan masukkan semua fitur dengan nilai yang valid.")
 
