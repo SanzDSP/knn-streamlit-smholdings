@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import gdown
 import pandas as pd
 import numpy as np
 import joblib
@@ -15,14 +16,25 @@ st.write("Aplikasi ini menggunakan algoritma K-Nearest Neighbors (KNN) untuk men
 
 def load_model():
     try:
-        url = "https://drive.google.com/file/d/1ozBdPgL-4R7nR6dFClY5HGSi75m7hEuo/view?usp=sharing"
-        response = requests.get(url)
-        with open("temp_model.h5", "wb") as f:
-            f.write(response.content)
-        X_train = pd.read_hdf("temp_model.h5", key='fitur_training')
+        # URL Google Drive
+        url = "https://drive.google.com/file/d/1ozBdPgL-4R7nR6dFClY5HGSi75m7hEuo/view?usp=drive_link"
+        
+        # Path sementara untuk menyimpan file
+        temp_file = "temp_model.h5"
+        
+        # Download file dari Google Drive
+        gdown.download(url, temp_file, quiet=False)
+        
+        # Membaca file HDF5
+        X_train = pd.read_hdf(temp_file, key='fitur_training')
+        
+        # Inisialisasi scaler
         scaler = StandardScaler()
         scaler.fit(X_train)
-        model = joblib.load('knn_model.pkl')
+        
+        # Load model dari file pickle (ubah sesuai dengan nama model Anda)
+        model = joblib.load("knn_model.pkl")
+        
         return model, scaler
     except Exception as e:
         st.error(f"Terjadi error saat memuat model: {e}")
