@@ -6,5 +6,4 @@ streamlit
 scikit-learn
 matplotlib
 tables
-io
 h5py
