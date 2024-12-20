@@ -29,10 +29,10 @@ st.title("Klasifikasi Saham Samsung")
 st.write("Masukkan fitur saham untuk mengetahui apakah saham baik atau buruk.")
 
 # Input fitur dari pengguna
-open_price = st.number_input("Harga Open", min_value=0.0, step=0.01)
-high_price = st.number_input("Harga High", min_value=0.0, step=0.01)
-low_price = st.number_input("Harga Low", min_value=0.0, step=0.01)
-close_price = st.number_input("Harga Close", min_value=0.0, step=0.01)
+open_price = st.number_input("Harga Open", min_value=0.0, step=10.0)
+high_price = st.number_input("Harga High", min_value=0.0, step=10.0)
+low_price = st.number_input("Harga Low", min_value=0.0, step=10.0)
+close_price = st.number_input("Harga Close", min_value=0.0, step=10.0)
 volume = st.number_input("Volume", min_value=0.0, step=10000.0)
 
 # Path file model
