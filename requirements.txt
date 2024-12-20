@@ -5,3 +5,4 @@ pydeck
 streamlit
 scikit-learn
 matplotlib
+tables
