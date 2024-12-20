@@ -1,14 +1,9 @@
 import streamlit as st
-import requests
-import gdown
 import pandas as pd
 import numpy as np
-import joblib
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
-from tensorflow.keras.models import load_model
 import io
 
 # Fungsi untuk memuat data dari file HDF5
