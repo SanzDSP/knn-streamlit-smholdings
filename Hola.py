@@ -20,7 +20,7 @@ def load_model(file_path):
     X_train, y_train, _, _ = load_data(file_path)
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
-    knn = KNeighborsClassifier(n_neighbors=3)
+    knn = KNeighborsClassifier(n_neighbors=7)
     knn.fit(X_train_scaled, y_train)
     return knn, scaler
 
