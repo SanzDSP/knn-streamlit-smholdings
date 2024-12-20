@@ -11,22 +11,7 @@ st.write("Aplikasi ini menggunakan algoritma K-Nearest Neighbors (KNN) untuk men
 
 # Fungsi untuk memuat model dan scaler
 @st.cache_resource
-"""
-def load_model():
-    try:
-        # Memuat dataset model dari file .h5
-        X_train = pd.read_hdf('samsungholdings_classification.h5', key='fitur_training')
-        scaler = StandardScaler()
-        scaler.fit(X_train)  # Fit scaler berdasarkan data training
-        model = joblib.load('knn_model.pkl')  # Load model yang telah disimpan
-        return model, scaler
-    except FileNotFoundError:
-        st.error("File `samsungholdings_classification.h5` tidak ditemukan. Pastikan file ada di direktori aplikasi.")
-    except ImportError as e:
-        st.error(f"Error impor modul: {e}. Pastikan semua dependensi terinstal.")
-    except Exception as e:
-        st.error(f"Terjadi error saat memuat model: {e}")
-"""
+
 def load_model():
     try:
         url = "https://drive.google.com/file/d/1ozBdPgL-4R7nR6dFClY5HGSi75m7hEuo/view?usp=sharing"
