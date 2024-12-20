@@ -4,7 +4,9 @@ import gdown
 import pandas as pd
 import numpy as np
 import joblib
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 
 # Title aplikasi
@@ -16,20 +18,29 @@ st.write("Aplikasi ini menggunakan algoritma K-Nearest Neighbors (KNN) untuk men
 
 def load_model():
     try:
-        # Path ke file CSV
+        # Coba memuat model dan scaler
+        model = joblib.load("knn_model.pkl")
+        scaler = joblib.load("scaler.pkl")
+    except FileNotFoundError:
+        st.warning("File model tidak ditemukan. Melatih ulang model...")
+        
+        # Membaca dataset
         X_train = pd.read_csv("fitur_training.csv")
         y_train = pd.read_csv("label_training.csv")
-        
-        # Inisialisasi scaler
+
+        # Scaling data
         scaler = StandardScaler()
-        scaler.fit(X_train)
-        
-        # Load model dari file pickle
-        model = joblib.load("knn_model.pkl")
-        
-        return model, scaler
-    except Exception as e:
-        st.error(f"Terjadi error saat memuat model: {e}")
+        X_train_scaled = scaler.fit_transform(X_train)
+
+        # Melatih model KNN
+        model = KNeighborsClassifier(n_neighbors=3)
+        model.fit(X_train_scaled, y_train.values.ravel())
+
+        # Menyimpan model dan scaler
+        joblib.dump(model, "knn_model.pkl")
+        joblib.dump(scaler, "scaler.pkl")
+
+    return model, scaler
 
 # Memuat model dan scaler
 model, scaler = load_model()
