@@ -5,45 +5,26 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
+import h5py
 import io
 
-# Fungsi untuk memuat data dari file HDF5
-def load_data(file_path):
-    X_train = pd.read_hdf(file_path, key='fitur_training')
-    y_train = pd.read_hdf(file_path, key='label_training')
-    X_test = pd.read_hdf(file_path, key='fitur_testing')
-    y_test = pd.read_hdf(file_path, key='label_testing')
-    return X_train, y_train, X_test, y_test
+# Fungsi untuk memuat model klasterisasi dari file HDF5
+def load_clusters(file_path):
+    with h5py.File(file_path, 'r') as h5_file:
+        data_scaled = h5_file['data_scaled'][:]
+        clusters = h5_file['clusters'][:]
+        centroids = h5_file['centroids'][:]
+    return data_scaled, clusters, centroids
 
-# Fungsi untuk memilih k terbaik
-def find_best_k(X_train, y_train):
-    scores = {}
-    for k in range(1, 21):  # Mencoba k dari 1 hingga 20
-        knn = KNeighborsClassifier(n_neighbors=k)
-        knn.fit(X_train, y_train)
-        y_pred = knn.predict(X_train)
-        scores[k] = f1_score(y_train, y_pred, average='weighted')
-    best_k = max(scores, key=scores.get)
-    return best_k
-
-# Fungsi untuk membuat dan melatih model
-@st.cache_resource
-def load_model(file_path):
-    X_train, y_train, _, _ = load_data(file_path)
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    
-    # Menyeimbangkan data untuk mengatasi bias
-    y_train_balanced = pd.Series(y_train).replace({0: 1, 1: 0})
-    best_k = find_best_k(X_train_scaled, y_train_balanced)  # Cari k terbaik
-    
-    knn = KNeighborsClassifier(n_neighbors=best_k)
-    knn.fit(X_train_scaled, y_train_balanced)
-    return knn, scaler, best_k
+# Fungsi untuk memuat model KNN
+def train_knn(data_scaled, clusters):
+    knn = KNeighborsClassifier(n_neighbors=4)  # Menggunakan 4 klaster
+    knn.fit(data_scaled, clusters)
+    return knn
 
 # Judul aplikasi
-st.title("Klasifikasi Saham Samsung")
-st.write("Masukkan fitur saham untuk mengetahui apakah saham baik atau buruk.")
+st.title("Klasifikasi dan Klasterisasi Saham Samsung")
+st.write("Masukkan fitur saham untuk mengetahui klaster saham Anda.")
 
 # Input fitur dari pengguna
 open_price = st.number_input("Harga Open", min_value=0.0, step=10.0)
@@ -52,55 +33,57 @@ low_price = st.number_input("Harga Low", min_value=0.0, step=10.0)
 close_price = st.number_input("Harga Close", min_value=0.0, step=10.0)
 volume = st.number_input("Volume", min_value=0.0, step=10000.0)
 
-# Path file model
-file_path = "samsungholdings_classification.h5"
+# Memuat model klasterisasi
+file_path = "samsung_clusters.h5"
+data_scaled, clusters, centroids = load_clusters(file_path)
 
-# Memuat model
-knn_model, scaler, best_k = load_model(file_path)
-st.write(f"Model menggunakan k={best_k}")
+# Latih model KNN untuk klasifikasi
+knn = train_knn(data_scaled, clusters)
 
-# Prediksi
+# Standarisasi data input
+scaler = StandardScaler()
+scaler.fit(data_scaled)
+
+# Prediksi klaster berdasarkan input pengguna
 if st.button("Klasifikasikan"):
     if open_price > 0 and high_price > 0 and low_price > 0 and close_price > 0 and volume > 0:
-        # Data input pengguna
-        user_data = pd.DataFrame({
-            'Open': [open_price],
-            'High': [high_price],
-            'Low': [low_price],
-            'Close': [close_price],
-            'Volume': [volume]
-        })
+        user_data = np.array([[open_price, high_price, low_price, close_price, volume]])
         user_data_scaled = scaler.transform(user_data)
-        prediction = knn_model.predict(user_data_scaled)
+        cluster = knn.predict(user_data_scaled)[0]
 
-        st.success(f"Hasil klasifikasi: {'Baik' if prediction[0] == 1 else 'Buruk'} saham")
+        # Tampilkan hasil klaster
+        cluster_labels = {
+            0: "High Volume and Price",
+            1: "Moderate Activity",
+            2: "Low Price, Low Volume",
+            3: "Very Low Activity"
+        }
+        st.success(f"Hasil klasifikasi: {cluster_labels[cluster]} (Cluster {cluster})")
     else:
         st.error("Silakan masukkan semua fitur dengan nilai yang valid.")
 
-# Visualisasi data
-st.subheader("Grafik Keuntungan dan Kerugian Saham")
-X_train, y_train, X_test, y_test = load_data(file_path)
-
-# Hitung jumlah keuntungan dan kerugian
-keuntungan = (y_train == 1).sum()
-kerugian = (y_train == 0).sum()
-
-# Visualisasi bar plot
-fig, ax = plt.subplots(figsize=(8, 5))
-bars = ax.bar(['Keuntungan', 'Kerugian'], [keuntungan, kerugian], color=['green', 'red'])
-ax.bar_label(bars, fmt='%d')
-
-# Tambahkan bingkai sesuai kategori
-ax.patches[0].set_edgecolor('green')
-ax.patches[0].set_linewidth(2)
-ax.patches[1].set_edgecolor('red')
-ax.patches[1].set_linewidth(2)
-
-# Tampilkan grafik
-plt.title('Distribusi Keuntungan dan Kerugian')
-buffer = io.BytesIO()
-plt.savefig(buffer, format="png")
-st.image(buffer)
+# Visualisasi klasterisasi
+st.subheader("Visualisasi Klasterisasi")
+plt.figure(figsize=(10, 6))
+for i in range(4):
+    plt.scatter(
+        data_scaled[clusters == i, 0],  # Fitur pertama (Open Price)
+        data_scaled[clusters == i, 3],  # Fitur keempat (Close Price)
+        label=f"Cluster {i}"
+    )
+plt.scatter(
+    centroids[:, 0],
+    centroids[:, 3],
+    color='red',
+    marker='X',
+    s=200,
+    label='Centroids'
+)
+plt.title("Klasterisasi Saham Samsung")
+plt.xlabel("Scaled Open Price")
+plt.ylabel("Scaled Close Price")
+plt.legend()
+st.pyplot(plt)
 
 st.write("Aplikasi ini membantu dalam memprediksi kategori saham berdasarkan model KNN.")
 
