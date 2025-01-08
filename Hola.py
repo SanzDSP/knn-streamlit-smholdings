@@ -28,7 +28,7 @@ def train_knn(data_scaled, clusters):
 def generate_simulation_data(cluster, days=30):
     np.random.seed(cluster)
     base_value = 100 + cluster * 20  # Nilai awal berdasarkan klaster
-    growth = np.cumsum(np.random.uniform(-5, 5, days))  # Simulasi perubahan
+    growth = np.cumsum(np.random.uniform(-5, 15, days))  # Menambah variasi pada perubahan
     return base_value + growth
 
 # Judul aplikasi
@@ -49,15 +49,16 @@ data_scaled, clusters, centroids = load_clusters(file_path)
 # Latih model KNN untuk klasifikasi
 knn = train_knn(data_scaled, clusters)
 
-# Standarisasi data input
+# Standarisasi data input dengan scaler yang sama yang digunakan pada data pelatihan
 scaler = StandardScaler()
-scaler.fit(data_scaled)
+scaler.fit(data_scaled)  # Fit dengan data pelatihan yang sudah distandarisasi
 
 # Prediksi klaster berdasarkan input pengguna
 if st.button("Klasifikasikan"):
     if open_price > 0 and high_price > 0 and low_price > 0 and close_price > 0 and volume > 0:
         user_data = np.array([[open_price, high_price, low_price, close_price, volume]])
-        user_data_scaled = scaler.transform(user_data)
+        user_data_scaled = scaler.transform(user_data)  # Transformasi input pengguna
+
         cluster = knn.predict(user_data_scaled)[0]
 
         # Tampilkan hasil klaster
