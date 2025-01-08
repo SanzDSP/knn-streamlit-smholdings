@@ -20,7 +20,7 @@ def load_clusters(file_path):
 
 # Fungsi untuk melatih model KNN
 def train_knn(data_scaled, clusters):
-    knn = KNeighborsClassifier(n_neighbors=4)  # Menggunakan 4 klaster
+    knn = KNeighborsClassifier(n_neighbors=3)  
     knn.fit(data_scaled, clusters)
     return knn
 
