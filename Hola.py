@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import h5py
 import io
 
@@ -16,15 +17,22 @@ def load_clusters(file_path):
         centroids = h5_file['centroids'][:]
     return data_scaled, clusters, centroids
 
-# Fungsi untuk memuat model KNN
+# Fungsi untuk melatih model KNN
 def train_knn(data_scaled, clusters):
     knn = KNeighborsClassifier(n_neighbors=4)  # Menggunakan 4 klaster
     knn.fit(data_scaled, clusters)
     return knn
 
+# Fungsi untuk menghasilkan data simulasi keuntungan/kerugian
+def generate_simulation_data(cluster, days=30):
+    np.random.seed(cluster)
+    base_value = 100 + cluster * 20  # Nilai awal berdasarkan cluster
+    growth = np.cumsum(np.random.uniform(-5, 5, days))  # Simulasi perubahan
+    return base_value + growth
+
 # Judul aplikasi
-st.title("Klasifikasi dan Klasterisasi Saham Samsung")
-st.write("Masukkan fitur saham untuk mengetahui klaster saham Anda.")
+st.title("Klasifikasi dan Visualisasi Saham Samsung")
+st.write("Masukkan fitur saham untuk mengetahui klaster saham Anda dan simulasi investasi.")
 
 # Input fitur dari pengguna
 open_price = st.number_input("Harga Open", min_value=0.0, step=10.0)
@@ -59,32 +67,30 @@ if st.button("Klasifikasikan"):
             3: "Very Low Activity"
         }
         st.success(f"Hasil klasifikasi: {cluster_labels[cluster]} (Cluster {cluster})")
+
+        # Simulasi data keuntungan/kerugian
+        st.subheader("Simulasi Pertumbuhan Investasi")
+        days = 30  # Simulasi untuk 30 hari
+        simulated_growth = generate_simulation_data(cluster, days)
+        time = np.arange(1, days + 1)
+
+        # Visualisasi 3D
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Grafik garis
+        ax.plot(time, simulated_growth, zs=cluster, zdir='z', label=f'Cluster {cluster}')
+        ax.set_xlabel("Hari")
+        ax.set_ylabel("Nilai Investasi")
+        ax.set_zlabel("Klaster")
+        ax.set_title("Grafik 3D Pertumbuhan Investasi")
+        plt.legend()
+        st.pyplot(fig)
+
     else:
         st.error("Silakan masukkan semua fitur dengan nilai yang valid.")
 
-# Visualisasi klasterisasi
-st.subheader("Visualisasi Klasterisasi")
-plt.figure(figsize=(10, 6))
-for i in range(4):
-    plt.scatter(
-        data_scaled[clusters == i, 0],  # Fitur pertama (Open Price)
-        data_scaled[clusters == i, 3],  # Fitur keempat (Close Price)
-        label=f"Cluster {i}"
-    )
-plt.scatter(
-    centroids[:, 0],
-    centroids[:, 3],
-    color='red',
-    marker='X',
-    s=200,
-    label='Centroids'
-)
-plt.title("Klasterisasi Saham Samsung")
-plt.xlabel("Scaled Open Price")
-plt.ylabel("Scaled Close Price")
-plt.legend()
-st.pyplot(plt)
-
-st.write("Aplikasi ini membantu dalam memprediksi kategori saham berdasarkan model KNN.")
+# Keterangan tambahan
+st.write("Aplikasi ini membantu memprediksi klaster saham dan memberikan simulasi investasi berdasarkan klaster.")
 
 
