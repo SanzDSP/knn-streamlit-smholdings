@@ -19,8 +19,8 @@ def load_clusters(file_path):
     return data_scaled, clusters, centroids
 
 # Fungsi untuk melatih model KNN
-def train_knn(data_scaled, clusters):
-    knn = KNeighborsClassifier(n_neighbors=3)  
+def train_knn(data_scaled, clusters, neighbors=3):
+    knn = KNeighborsClassifier(n_neighbors=neighbors)  # Optimalisasi jumlah tetangga
     knn.fit(data_scaled, clusters)
     return knn
 
@@ -47,17 +47,25 @@ file_path = "samsung_clusters.h5"
 data_scaled, clusters, centroids = load_clusters(file_path)
 
 # Latih model KNN untuk klasifikasi
-knn = train_knn(data_scaled, clusters)
+knn = train_knn(data_scaled, clusters, neighbors=5)  # Ubah jumlah tetangga jika perlu
 
 # Standarisasi data input
 scaler = StandardScaler()
 scaler.fit(data_scaled)
+
+# Visualisasi distribusi centroid (opsional)
+st.subheader("Distribusi Centroid")
+for idx, centroid in enumerate(centroids):
+    st.write(f"Centroid Cluster {idx}: {centroid}")
 
 # Prediksi klaster berdasarkan input pengguna
 if st.button("Klasifikasikan"):
     if open_price > 0 and high_price > 0 and low_price > 0 and close_price > 0 and volume > 0:
         user_data = np.array([[open_price, high_price, low_price, close_price, volume]])
         user_data_scaled = scaler.transform(user_data)
+        st.write(f"Data input (setelah standarisasi): {user_data_scaled}")
+
+        # Prediksi klaster
         cluster = knn.predict(user_data_scaled)[0]
 
         # Tampilkan hasil klaster
