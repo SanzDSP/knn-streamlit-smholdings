@@ -6,6 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import plotly.graph_objects as go
 import h5py
 import io
 
@@ -26,7 +27,7 @@ def train_knn(data_scaled, clusters):
 # Fungsi untuk menghasilkan data simulasi keuntungan/kerugian
 def generate_simulation_data(cluster, days=30):
     np.random.seed(cluster)
-    base_value = 100 + cluster * 20  # Nilai awal berdasarkan cluster
+    base_value = 100 + cluster * 20  # Nilai awal berdasarkan klaster
     growth = np.cumsum(np.random.uniform(-5, 5, days))  # Simulasi perubahan
     return base_value + growth
 
@@ -74,18 +75,33 @@ if st.button("Klasifikasikan"):
         simulated_growth = generate_simulation_data(cluster, days)
         time = np.arange(1, days + 1)
 
-        # Visualisasi 3D
-        fig = plt.figure(figsize=(10, 6))
-        ax = fig.add_subplot(111, projection='3d')
+        # Visualisasi interaktif dengan Plotly
+        fig = go.Figure()
 
-        # Grafik garis
-        ax.plot(time, simulated_growth, zs=cluster, zdir='z', label=f'Cluster {cluster}')
-        ax.set_xlabel("Hari")
-        ax.set_ylabel("Nilai Investasi")
-        ax.set_zlabel("Klaster")
-        ax.set_title("Grafik 3D Pertumbuhan Investasi")
-        plt.legend()
-        st.pyplot(fig)
+        # Menambahkan garis simulasi
+        fig.add_trace(go.Scatter3d(
+            x=time,
+            y=simulated_growth,
+            z=[cluster] * days,
+            mode='lines+markers',
+            marker=dict(size=5, color=simulated_growth, colorscale='Viridis', opacity=0.8),
+            line=dict(color='blue', width=2),
+            name=f"Cluster {cluster}"
+        ))
+
+        # Pengaturan layout
+        fig.update_layout(
+            title="Grafik 3D Pertumbuhan Investasi",
+            scene=dict(
+                xaxis_title="Hari",
+                yaxis_title="Nilai Investasi",
+                zaxis_title="Klaster",
+            ),
+            margin=dict(l=0, r=0, b=0, t=40),
+        )
+
+        # Tampilkan grafik
+        st.plotly_chart(fig, use_container_width=True)
 
     else:
         st.error("Silakan masukkan semua fitur dengan nilai yang valid.")
