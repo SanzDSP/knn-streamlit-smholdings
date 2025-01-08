@@ -7,4 +7,5 @@ scikit-learn
 matplotlib
 tables
 h5py
+mpl_toolkits
 imblearn
